@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding-top: 60px; /* Space for fixed navbar */
+        }
+        .weather-card {
+            margin-bottom: 20px;
+        }
+        .weather-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .weather-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            display: block;
+        }
+        .weather-details {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .forecast-card {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Weather Dashboard</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <!-- Add your navigation links here if needed -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="weather-header">
+            <h1>Current Weather</h1>
+            <form id="location-form" class="form-inline justify-content-center">
+                <label class="sr-only" for="location">Location</label>
+                <input type="text" class="form-control mb-2 mr-sm-2" id="location" placeholder="Enter City" required>
+                <button type="submit" class="btn btn-primary mb-2">Search</button>
+            </form>
+        </div>
+
+        <div id="weather-display" class="row justify-content-center">
+            <!-- Weather data will be inserted dynamically here -->
+        </div>
+
+        <h2 class="text-center mt-5">Forecast</h2>
+        <div id="forecast-display" class="row justify-content-center">
+            <!-- Forecast data will be inserted dynamically here -->
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Custom JavaScript for Weather Dashboard -->
+    <script>
+        const apiKey = 'bd5e378503939ddaee76f12ad7a97608'; // Replace with your OpenWeatherMap API key
+
+        // Function to fetch current weather
+        function fetchCurrentWeather(city) {
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const { main, weather } = data;
+                    const temp = main.temp;
+                    const description = weather[0].description;
+                    const icon = weather[0].icon;
+
+                    const weatherDisplay = `
+                        <div class="col-md-4">
+                            <div class="card weather-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">${city}</h5>
+                                    <img src="http://openweathermap.org/img/wn/${icon}.png" class="weather-icon" alt="Weather Icon">
+                                    <p class="card-text">${temp} °C</p>
+                                    <p class="card-text">${description}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('weather-display').innerHTML = weatherDisplay;
+                })
+                .catch(error => {
+                    console.log('Error fetching current weather:', error);
+                    document.getElementById('weather-display').innerHTML = '<p>Error fetching weather data</p>';
+                });
+        }
+
+        // Function to fetch weather forecast
+        function fetchWeatherForecast(city) {
+            const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const forecasts = data.list.slice(0, 5); // Get first 5 forecasts (next 5 days)
+
+                    let forecastDisplay = '';
+                    forecasts.forEach(forecast => {
+                        const { dt_txt, main, weather } = forecast;
+                        const date = new Date(dt_txt);
+                        const day = date.toLocaleDateString('en-US', { weekday: 'short' });
+                        const temp = main.temp;
+                        const description = weather[0].description;
+
+                        forecastDisplay += `
+                            <div class="col-md-2 forecast-card">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${day}</h5>
+                                        <p class="card-text">${temp} °C</p>
+                                        <p class="card-text">${description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    document.getElementById('forecast-display').innerHTML = forecastDisplay;
+                })
+                .catch(error => {
+                    console.log('Error fetching weather forecast:', error);
+                    document.getElementById('forecast-display').innerHTML = '<p>Error fetching forecast data</p>';
+                });
+        }
+
+        // Event listener for form submission
+        document.getElementById('location-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const location = document.getElementById('location').value.trim();
+            if (location !== '') {
+                fetchCurrentWeather(location);
+                fetchWeatherForecast(location);
+            }
+        });
+    </script>
+</body>
+</html>
